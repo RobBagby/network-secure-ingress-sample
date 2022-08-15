@@ -95,7 +95,7 @@ resource ubuntuVMInstallCli 'Microsoft.Compute/virtualMachines/extensions@2020-0
     settings: {
       skipDos2Unix: false
       fileUris: [
-        'https://bagbystorage.blob.core.windows.net/scripts/install_cli.sh'
+        'https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/infra-as-code/scripts/install_cli.sh'
       ]
     }
     protectedSettings: {
