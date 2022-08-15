@@ -23,11 +23,19 @@ Once the deployment is complete, you will need to add an "index.html" file to th
 
 ![Azure Front Door Premium Network Diagram](docs/media/network-diagram-ingress.png)
 
-If you choose to deploy Premium, private endpoint connection requests will be created from Azure Front Door Premium to each storage account. Further, the storage accounts will be configured to only be accessible from selected virtual networks and IP addresses, with no virtual networks specified. This effectively locks down the storage accounts.
+If you choose to deploy Azure Front Door premium tier, private endpoint connection requests will be created from Azure Front Door Premium to each storage account. Further, the storage accounts will be configured to only be accessible from selected virtual networks and IP addresses, with no virtual networks specified. This effectively locks down the storage accounts.
+
+All requests will flow through Azure Front Door. Azure Front Door will connect to the Azure Storage Accounts through the Microsoft Backbone network via Private Link.
 
 ### Virtual Network for Azure Front Door Premium
 
-Because the storage accounts are locked down, the sample also allows you to deploy an Azure Virtual Network with Azure Bastion and a Jumpbox Virtual Machine. Private endpoint connections are made to the storage account in the Virtual Network. This will allow you to interact with the Storage Accounts from the Jumpbox. The following resources are deployed:
+![Azure Front Door Premium with Azure Bastion Network Diagram](docs/media/network-diagram-ingress-with-vnet.png)
+
+Because the storage accounts are locked down, the sample also allows you to deploy an Azure Virtual Network with Azure Bastion and a Jumpbox Virtual Machine. Private endpoint connections are made to the storage account in the Virtual Network. This will allow you to interact with the Storage Accounts from the Jumpbox.
+
+Again, all requests will flow through Azure Front Door and Azure Front Door will connect to the Azure Storage Accounts through the Microsoft Backbone network via Private Link.
+
+This deployment illustrates how an administrator could connect to a jumpbox virtual machine via Azure Bastion to perform any (emergency) administrative tasks. The following resources are deployed:
 
 - Azure Virtual Network with 5 subnets:
   - default
@@ -39,6 +47,13 @@ Because the storage accounts are locked down, the sample also allows you to depl
 - Azure Bastion
 - Private endpoints to each storage account
 - Private DNS Zone - configured with A records for the private endpoint URLs to the storage accounts
+
+The following describes the administrative flow:
+
+1. An administrator connects to Azure Bastion that is deployed in the Virtual Network.
+2. Azure Bastion provides SSH connectivity to the jumpbox virtual machine.
+3. The administrator on the jumpbox tries to access the storage account via the Azure CLI. The jumpbox queries DNS for the public Azure Blob Storage Account endpoint: storageaccountname.blob.core.windows.net. Private DNS ultimately resolves to storageaccountname.privatelink.blob.core.windows.net, returning the private IP address of the private link endpoint which is 10.0.2.5 in this example.
+4. A private connection to the storage account is established through the private link endpoint.
 
 ## Getting Started
 
