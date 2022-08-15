@@ -15,8 +15,6 @@ param location string = 'centralus'
 ])
 param storageSkuName string = 'Standard_LRS'
 
-param storageAccountWebsiteContainerName string = 'web'
-
 param storageAccountWebsiteLocations array = [
   'eastus'
   'westus3'
@@ -47,7 +45,6 @@ module storageAccounts 'modules/storageAccounts.bicep' = {
     assetPrefix: assetPrefix
     setDefaultActionDeny: frontDoorSkuName == 'Premium_AzureFrontDoor'? true : false
     skuName: storageSkuName
-    storageAccountWebsiteContainerName: storageAccountWebsiteContainerName
     storageAccountWebsiteLocations: storageAccountWebsiteLocations
   }
 }

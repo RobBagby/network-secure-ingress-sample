@@ -155,12 +155,12 @@ az storage blob copy start \
   --destination-blob index.html \
   --auth-mode login \
   --destination-container web \
-  --source-uri https://bagbystorage.blob.core.windows.net/web/index-west.html
+  --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/west/index.html
 
 az storage blob copy start \
   --account-name nameOfEastStorageAccount \
   --destination-blob index.html \
   --auth-mode login \
   --destination-container web \
-  --source-uri https://bagbystorage.blob.core.windows.net/web/index-east.html
+  --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/east/index.html
 ```
