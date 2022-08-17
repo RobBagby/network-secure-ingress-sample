@@ -30,7 +30,6 @@ var firewallSubnetName = 'FirewallSubnet'
 var privateEndpointsSubnetName = 'PrivateEndpointsSubnet'
 
 var roleStorageBlobDataContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-var principalType = 'ServicePrincipal'
 
 var vnetSettings = {
   name: '${assetPrefix}-vnet'
@@ -132,7 +131,6 @@ module storageAccountRoleAssignment 'modules/storageAccountRoleAssignment.bicep'
   scope: resourceGroup(resourceGroupName)
   params: {
     principalId: principalId
-    principalType: principalType
     roleDefinitionResourceId: roleStorageBlobDataContributor
   }
 }

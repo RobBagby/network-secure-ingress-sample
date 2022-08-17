@@ -57,10 +57,23 @@ The following describes the administrative flow:
 
 ## Getting Started
 
+> [!IMPORTANT]
+> This sample assumes that there are no Azure Policies blocking aspects of the deployment. For example, many companies have a policy set to deny Azure Storage Accounts with public access. This sample uses publicly accessible Storage Accounts.
+
 There are a couple of prerequisites you will need:
 
+- You will need to clone the repository
 - A service principal. You will need the service principal app id, object id and password
 - A SSH key pair
+
+### Clone or download this repository
+
+From your shell or command line:
+
+```bash
+git clone https://github.com/RobBagby/network-secure-ingress-sample
+cd network-secure-ingress-sample
+```
 
 ### Creating a service principal
 
@@ -178,4 +191,14 @@ az storage blob copy start \
   --auth-mode login \
   --destination-container web \
   --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/east/index.html
+```
+
+## Clean up resources
+
+```bash
+az deployment group create -f ./main.bicep -g my-rg --mode Complete
+```
+
+```bash
+az group delete --name <nameOfResourceGroup>
 ```

@@ -1,20 +1,14 @@
 targetScope = 'subscription'
 
 @description('This is the prefix for each Azure resource name')
-param assetPrefix string = 'bagbyfrtda'
+@minLength(6) 
+@maxLength(12)
+param assetPrefix string
 
 @description('The location of the resource group, vnet, jumpbox and bastion.')
 param location string = 'centralus'
 
-@description('The name of the SKU to use when creating the Azure Storage account.')
-@allowed([
-  'Standard_LRS'
-  'Standard_GRS'
-  'Standard_ZRS'
-  'Premium_LRS'
-])
-param storageSkuName string = 'Standard_LRS'
-
+@description('This is an array of valid azure locations where storage accounts will be deployed.')
 param storageAccountWebsiteLocations array = [
   'eastus'
   'westus3'
@@ -26,7 +20,6 @@ param storageAccountWebsiteLocations array = [
   'Premium_AzureFrontDoor'
 ])
 param frontDoorSkuName string = 'Standard_AzureFrontDoor'
-
 
 var rgName = '${assetPrefix}-rg'
 
@@ -44,7 +37,6 @@ module storageAccounts 'modules/storageAccounts.bicep' = {
   params: {
     assetPrefix: assetPrefix
     setDefaultActionDeny: frontDoorSkuName == 'Premium_AzureFrontDoor'? true : false
-    skuName: storageSkuName
     storageAccountWebsiteLocations: storageAccountWebsiteLocations
   }
 }
@@ -55,9 +47,6 @@ module frontDoor 'modules/frontdoor.bicep' = {
   params: {
     frontDoorSkuName: frontDoorSkuName
     assetPrefix: assetPrefix
-    frontDoorSettings: storageAccounts.outputs.storageSettings
+    blobOrigins: storageAccounts.outputs.storageSettings
   }
-  dependsOn: [ 
-    storageAccounts 
-  ]
 }

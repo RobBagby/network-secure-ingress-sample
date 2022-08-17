@@ -3,10 +3,10 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "jumpboxPublicSshKey": {
-      "value": ""
+      "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDS2xdzySrPsJ0IG63qPuePxhLxrFO2FisMk4Or3BTnEcA/Ul81nj9lWTiIcZHhPzPShZbt1xwjj1i01QgF8rR83hlC9M6cBzIjjOKSB0TtuU/0dIT61cn65v5Yaqoyi9lC25uC9gLgT3HSe2uMJtE5Zx5oQghnPJiRcdMflRaVYwiFyFonkt6PBmKq16YZr6pSHOtbWhA0lUvikHJgUvqG1JOssUyX/o1cwi9lbCySLBAdGy0UtgoDyj1MEUoriFFU+WpeHb11TW784F5xjvR5T5AFI3N0ch4MRvCOdttVP0OstzzQ0jqxqX1DGz8H391kdUUtn9kqsXSbQEI48W4Pe9jhtQI7UrigDSC8BsC0hbyFx57cFFyaSoX8ySZJaeCpl4eioWEYOE4PniMjHaxfotQA1DuVlQvzQhq2I776lMeX1loQfZjepWP7hogY31YmPyE7M7MBHyGi0g2dZtdyI3pV+2rG6dve9jxQ0OhiZo0eTPS/bNCoS09OZ8KpEbU= generated-by-azure"
     },
     "assetPrefix" :{
-      "value": ""
+      "value": "staticweb"
     },
     "storageAccountWebsiteLocations": {
       "value": [
@@ -15,10 +15,10 @@
       ]
     },
     "vmadmin" :{
-      "value": ""
+      "value": "azureuser"
     },
     "principalId": {
-      "value": ""
+      "value": "4b29656b-5569-4f66-b398-211cb80c32ac"
     }
   }
 }
