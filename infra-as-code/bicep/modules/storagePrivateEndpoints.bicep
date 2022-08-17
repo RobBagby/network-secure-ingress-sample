@@ -1,14 +1,14 @@
 @description('Name of the pe')
-param name string = ''
+param name string 
 
 @description('Location of the pe')
-param location string = ''
+param location string 
 
 @description('Id of the vnet.')
-param vnetId string = ''
+param vnetId string 
 
 @description('Id of the subnet that the bastion will be deployed to.')
-param subnetId string = ''
+param subnetId string 
 
 @description('The settings for the storage accounts that were created. They are used to create the PE for the storage accounts and DNS entries.')
 param storageSettings array = [
