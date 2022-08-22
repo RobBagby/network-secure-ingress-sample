@@ -5,7 +5,7 @@ param principalId string
 param roleDefinitionResourceId string
 
 @description('This is the prefix for each Azure resource name')
-param assetPrefix string = 'bagbyfd'
+param assetPrefix string
 
 var principalType = 'User'
 
