@@ -1,24 +1,13 @@
 @description('This is the prefix for each Azure resource name')
-param assetPrefix string = 'bagbyfd'
-
-@description('The name of the SKU to use when creating the Azure Storage account.')
-@allowed([
-  'Standard_LRS'
-  'Standard_GRS'
-  'Standard_ZRS'
-  'Premium_LRS'
-])
-param skuName string
+param assetPrefix string
 
 @description('Boolean indicating whether you want to deny traffic by default')
 param setDefaultActionDeny bool
 
 @description('Array containing the locations to deploy storage accounts')
-param storageAccountWebsiteLocations array = [
-  'eastus'
-  'westus3'
-]
+param storageAccountWebsiteLocations array 
 
+var skuName = 'Standard_LRS'
 var storageAccountWebsiteContainerName  = 'web'
 
 resource storageAccounts 'Microsoft.Storage/storageAccounts@2021-08-01' = [for location in storageAccountWebsiteLocations: {

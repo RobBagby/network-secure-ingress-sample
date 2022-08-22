@@ -2,7 +2,7 @@
 param assetPrefix string = 'bagbyfd'
 
 @description('Settings to create private endpoints for storage accounts.')
-param frontDoorSettings array = [
+param blobOrigins array = [
   {
     blobEndpointHostName: ''
     storageResourceId: ''
@@ -17,15 +17,9 @@ param frontDoorSettings array = [
 ])
 param frontDoorSkuName string
 
-@description('The protocol that should be used when connecting from Front Door to the origin.')
-@allowed([
-  'HttpOnly'
-  'HttpsOnly'
-  'MatchRequest'
-])
-param originForwardingProtocol string = 'HttpsOnly'
+var originForwardingProtocol = 'HttpsOnly'
 
-var privateLinkOriginDetails = [for (origin, i) in frontDoorSettings: {
+var privateLinkOriginDetails = [for (origin, i) in blobOrigins: {
   privateLink: {
     id: '${origin.storageResourceId}'
   }
@@ -63,7 +57,7 @@ resource originGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
   }
 }
 
-resource origins 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = [for (setting, i) in frontDoorSettings: {
+resource origins 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = [for (setting, i) in blobOrigins: {
   name: 'origin${i}'
   parent: originGroup
   properties: {
@@ -80,7 +74,9 @@ resource origins 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = [for
 resource route 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
   name: '${assetPrefix}-fdrt'
   parent: endpoint
-  dependsOn: origins 
+  dependsOn: [
+    origins
+  ] 
   properties: {
     originGroup: {
       id: originGroup.id
@@ -97,6 +93,3 @@ resource route 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
     httpsRedirect: 'Enabled'
   }
 }
-
-output frontDoorEndpointHostName string = endpoint.properties.hostName
-output frontDoorId string = profile.properties.frontDoorId

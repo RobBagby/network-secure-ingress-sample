@@ -57,36 +57,22 @@ The following describes the administrative flow:
 
 ## Getting Started
 
+> [!IMPORTANT]
+> This sample assumes that there are no Azure Policies blocking aspects of the deployment. For example, many companies have a policy set to deny Azure Storage Accounts with public access. This sample uses publicly accessible Storage Accounts.
+
 There are a couple of prerequisites you will need:
 
-- A service principal. You will need the service principal app id, object id and password
+- You will need to clone the repository
 - A SSH key pair
+- The object id of the logged in user
 
-### Creating a service principal
+### Clone or download this repository
 
-You must pass the object id of a service principal as a parameter. This SP will be given Storage Blob Data Contributor Role Assignment at the Resource Group level. This SP can be used to connect to the storage accounts.
-
-To create a service principal, follow the guidance on [creating a password-based authenticated sp here](https://docs.microsoft.com/cli/azure/create-an-azure-service-principal-azure-cli#password-based-authentication). The following is an example:
-
-```bash
-az ad sp create-for-rbac --scopes /subscriptions/mySubscriptionID \
-  --name myServicePrincipalName \
-  --role rolename
-
-az ad sp create-for-rbac --scopes "/subscriptions/mySubscriptionID" --role "Contributor" --name mySpName
-{
-  "appId": "appIdGuid",
-  "displayName": "mySpName",
-  "name": "guid",
-  "password": "password",
-  "tenant": "myTenantId"
-}
-```
-
-You will also need the object id of the SP. You can get that with this Azure CLI call
+From your shell or command line:
 
 ```bash
-az ad sp show --id <appIdGuid from above> --query id
+git clone https://github.com/RobBagby/network-secure-ingress-sample
+cd network-secure-ingress-sample
 ```
 
 ### Creating SSH key pair
@@ -97,16 +83,24 @@ There are a variety of ways to create the SSH pey pair:
 - [Create and manage SSH keys locally](https://docs.microsoft.com/azure/virtual-machines/linux/create-ssh-keys-detailed)
 - [Create and manage SSH Keys with the Azure CLI](https://docs.microsoft.com/azure/virtual-machines/ssh-keys-azure-cli)
 
+### Getting the object id of the logged in user
+
+You must pass the object id of the logged in user as a parameter to deployVnet.bicep. This user will be given Storage Blob Data Contributor Role Assignment at the Resource Group level. This SP can be used to connect to the storage accounts. To get the object id, run the following command in your shell.
+
+```bash
+az ad signed-in-user show --query id
+```
+
 ## Deploying
 
 ### Deploying Azure Front Door Standard
 
-Use the following command to deploy the Azure Front Door Standard deployment
+Use the following command to deploy the Azure Front Door Standard deployment. Make sure you are in the root directory of the repository you cloned.
 
 ```bash
-az deployment sub create --template-file deployRgFrontDoorAndWeb.bicep \
+az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoorAndWeb.bicep \
   --location centralus \
-  -p frontDoorSkuName=Standard_AzureFrontDoor assetPrefix=uniqueprefixname
+  -p frontDoorSkuName=Standard_AzureFrontDoor assetPrefix=<uniqueprefixname>
 ```
 
 ### Deploying Azure Front Door Premium With Private Endpoints
@@ -114,39 +108,38 @@ az deployment sub create --template-file deployRgFrontDoorAndWeb.bicep \
 Use the following command to deploy the Azure Front Door Premium deployment
 
 ```bash
-az deployment sub create --template-file deployRgFrontDoorAndWeb.bicep \
+az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoorAndWeb.bicep \
   --location centralus \
-  -p frontDoorSkuName=Premium_AzureFrontDoor assetPrefix=uniqueprefixname
+  -p frontDoorSkuName=Premium_AzureFrontDoor assetPrefix=<uniqueprefixname>
 ```
 
 ### Deploying the VNet for the Front Door Premium deployment
 
 You will need to update the following parameters in parameters.json:
 
-- jumpboxPublicSshKey - This is the public SSH key you created earlier
-- assetPrefix - This is used as the basis for the names of every asset deployed. For example if the assetPrefix is 'testworkload', the Azure Resource Group name will be 'testworkload-rg'. This assetPrefix MUST match the assetPrefix used in the Front Door Premium deployment
-- storageAccountWebsiteLocations - This is an array of valid Azure locations where Storage Accounts will be created.
-- vmadmin - The name of the admin account to create for the Jumpbox Virtual Machine.
-- principalId - The object id of the Service Principal created above. Do not use the appId.
+1. **jumpboxPublicSshKey** - Set this to the public SSH key you created earlier.
+1. **assetPrefix** - This is used as the basis for the names of every asset deployed. For example if the assetPrefix is 'testworkload', the Azure Resource Group name will be 'testworkload-rg' and the Front Door name will be testworkload-fdprofile. This assetPrefix MUST match the assetPrefix used in the Front Door Premium deployment.
+1. **storageAccountWebsiteLocations** - Set this to an array of valid Azure locations. Storage Accounts will be created in each location. The following is an example:
 
-The following is an example of storageAccountWebsiteLocations:
+   ```json
+       "storageAccountWebsiteLocations": {
+      "value": [
+        "eastus",
+        "westus3"
+      ]
+    },
+   ```
 
-```bash
-"storageAccountWebsiteLocations": {
-    "value": [
-    "eastus",
-    "westus3"
-    ]
-},
-```
+1. **principalId** - Set this to the object id of the logged in user you queried for earlier.
 
 Use the following command to deploy the Virtual Network deployment
 
 ```bash
 az deployment group create \
-  --template-file deployVnet.bicep \
-  --resource-group resourceGroupName \
-  --parameters @parameters.json 
+  --template-file ./infra-as-code/bicep/deployVnet.bicep \
+  --resource-group <resourceGroupName> \
+  --location=centralus \
+  --parameters @./infra-as-code/bicep/parameters.json 
 ```
 
 Note: The resourceGroupName should be the name of the resource group deployed in the Front Door Premium deployment.
@@ -154,28 +147,82 @@ Note: You MUST make sure that the assetPrefix matches the assetPrefix used in th
 
 ## Adding index.html files to the websites
 
-This repository has 2 index.html files you can use. One is for West US and the other for East US.
+### Connecting to network secured Azure Storage Accounts
 
-Use the following command to log into the Azure CLI as the Service Principal:
+If you deployed the premium tier of Azure Front Door by setting the frontDoorSkuName parameter to 'Premium_AzureFrontDoor' when deploying 'deployRgFrontDoorAndWeb.bicep', the Azure Storage accounts will have public network access set to 'Enabled from selected virtual networks and IP addresses'. You will not be able to access the storage account without either:
 
-```bash
-read -sp "Password for Service Principal: " SP_SECRET && echo && read -sp "appId for Service Principal: " SP_APPID && echo && read -sp "Tenant id for Service Principal: " SP_TENANT && echo && az login --service-principal -u $SP_APPID -p $SP_SECRET --tenant $SP_TENANT
-```
+1. [Configure Azure Storage firewalls and virtual networks](https://docs.microsoft.com/azure/storage/common/storage-network-security?tabs=azure-portal) to allow your client IP address. Open a shell.
+2. [Deploy a VNet with a Jumpbox](#deploying-the-vnet-for-the-front-door-premium-deployment) and [Connect to the jumpbox](docs/ConnectToJumpbox.md)
+
+### Log in to the Azure CLI
+
+**Note: If you are using your own shell, you will have to make sure you have the [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) installed.**
+
+Perform the following steps:
+
+1. [Log in to the Azure CLI](https://docs.microsoft.com/cli/azure/authenticate-azure-cli)
+1. [Choose your subscription](https://docs.microsoft.com/cli/azure/manage-azure-subscriptions-azure-cli#change-the-active-subscription)
+
+### Add the files via the CLI
 
 Use the following commands to copy the sample web pages to your storage accounts:
 
 ```bash
 az storage blob copy start \
-  --account-name nameOfWestStorageAccount \
+  --account-name <nameOfWestStorageAccount> \
   --destination-blob index.html \
   --auth-mode login \
   --destination-container web \
   --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/west/index.html
 
 az storage blob copy start \
-  --account-name nameOfEastStorageAccount \
+  --account-name <nameOfEastStorageAccount> \
   --destination-blob index.html \
   --auth-mode login \
   --destination-container web \
   --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/east/index.html
+```
+
+Use the following commands to validate that the web pages were copied to the storage accounts:
+
+```bash
+az storage blob list -c web --account-name <nameOfWestStorageAccount> --auth-mode login -o table
+az storage blob list -c web --account-name <nameOfEastStorageAccount> --auth-mode login -o table
+```
+
+Note: You might need to set the content-type for the index.html files to "text/html". To do that, run the following commands.
+
+```bash
+az storage blob update --account-name <nameOfWestStorageAccount> --container-name web --name index.html --content-type "text/html" --auth-mode login
+az storage blob update --account-name <nameOfEastStorageAccount> --container-name web --name index.html --content-type "text/html" --auth-mode login
+```
+
+## Approve the private endpoint requests
+
+In the deployment, a private endpoint request was made from Azure Front Door to each Storage Account. **You need to approve each request.**  
+
+![Storage Account private endpoint connections](docs/media/approve-private-endpoint-connection.png)
+
+To Approve the private endpoint request, open each Storage Account in the Azure Portal and perform the following steps:
+
+1. Click on Networking.
+1. Click on the Private endpoint connections tab.
+1. Check the checkbox for the private endpoint connection request that has the Connection state of 'Pending'.
+1. Click the 'Approve' button.
+1. Confirm.
+
+## Test the global routing
+
+1. Open your Azure Front Door instance in the Azure Portal.
+1. Get the endpoint hostname from the Overview tab.
+  ![Azure Front Door endpoint hostname](docs/media/azure-front-door-endpoint-hostname.png)
+1. Append '/web/index.html' to the hostname and paste in a browser.
+1. Refresh several times. You should see both 'East' and 'West' in the response.
+
+  ![Azure Front Door request](docs/media/azure-front-door-request.png)
+
+## Clean up resources
+
+```bash
+az group delete --name <nameOfResourceGroup>
 ```
