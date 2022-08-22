@@ -1,10 +1,10 @@
 targetScope = 'resourceGroup'
 
 @description('This is the prefix for each Azure resource name')
-param assetPrefix string = 'bagbyfd'
+param assetPrefix string
 
 @description('The location to deploy the vnet, jumpbox and bastion. Default: resourceGroup().location')
-param location string = resourceGroup().location
+param location string
 
 @description('The locations of the storage accounts that contain the websites.')
 param storageAccountWebsiteLocations array = [
