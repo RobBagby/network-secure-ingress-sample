@@ -14,11 +14,8 @@
         "westus3"
       ]
     },
-    "vmadmin" :{
-      "value": "azureuser"
-    },
     "principalId": {
-      "value": "4b29656b-5569-4f66-b398-211cb80c32ac"
+      "value": "cb4a7206-4465-408d-8a7b-6cf4e9217e77"
     }
   }
 }
