@@ -190,6 +190,13 @@ az storage blob list -c web --account-name <nameOfWestStorageAccount> --auth-mod
 az storage blob list -c web --account-name <nameOfEastStorageAccount> --auth-mode login -o table
 ```
 
+Note: You might need to set the content-type for the index.html files to "text/html". To do that, run the following commands.
+
+```bash
+az storage blob update --account-name <nameOfWestStorageAccount> --container-name web --name index.html --content-type "text/html" --auth-mode login
+az storage blob update --account-name <nameOfEastStorageAccount> --container-name web --name index.html --content-type "text/html" --auth-mode login
+```
+
 ## Approve the private endpoint requests
 
 In the deployment, a private endpoint request was made from Azure Front Door to each Storage Account. **You need to approve each request.**  
@@ -211,6 +218,8 @@ To Approve the private endpoint request, open each Storage Account in the Azure 
   ![Azure Front Door endpoint hostname](docs/media/azure-front-door-endpoint-hostname.png)
 1. Append '/web/index.html' to the hostname and paste in a browser.
 1. Refresh several times. You should see both 'East' and 'West' in the response.
+
+  ![Azure Front Door request](docs/media/azure-front-door-request.png)
 
 ## Clean up resources
 
