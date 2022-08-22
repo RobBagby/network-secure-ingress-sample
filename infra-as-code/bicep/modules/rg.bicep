@@ -1,5 +1,9 @@
 targetScope = 'subscription'
-param location string = deployment().location
+
+@description('The location for the resource group')
+param location string
+
+@description('The name for the resource group')
 param rgName string
 
 resource rg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
@@ -7,5 +11,4 @@ resource rg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: rgName
 }
 
-output rgId string = rg.id
 output rgName string = rg.name

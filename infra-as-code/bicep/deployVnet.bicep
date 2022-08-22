@@ -12,8 +12,7 @@ param storageAccountWebsiteLocations array = [
   'westus3'
 ]
 
-@description('The admin user name for the jumpbox')
-param vmadmin string = 'azureuser'
+var vmadmin = 'azureuser'
 
 @description('The ssh public key for the jumpbox')
 @secure()
@@ -26,38 +25,32 @@ param principalId string = ''
 var resourceGroupName = resourceGroup().name
 var bastionSubnetName = 'AzureBastionSubnet'
 var jumpboxSubnetName = 'JumpboxSubnet'
-var firewallSubnetName = 'FirewallSubnet'
 var privateEndpointsSubnetName = 'PrivateEndpointsSubnet'
 
 var roleStorageBlobDataContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-var principalType = 'ServicePrincipal'
 
 var vnetSettings = {
   name: '${assetPrefix}-vnet'
   location: location
   addressPrefixes: [
-    '10.0.0.0/16'
+    '10.0.0.0/23'
   ]
   subnets: [
     {
-      name: 'default'
+      name: 'workloadSubnet'
       addressPrefix: '10.0.0.0/24'
     }
     {
-      name: firewallSubnetName
-      addressPrefix: '10.0.1.0/24'
-    }
-    {
       name: privateEndpointsSubnetName
-      addressPrefix: '10.0.2.0/24'
-    }
-    {
-      name: jumpboxSubnetName
-      addressPrefix: '10.0.3.0/28'
+      addressPrefix: '10.0.1.0/27'
     }
     {
       name: bastionSubnetName
-      addressPrefix: '10.0.4.0/28'
+      addressPrefix: '10.0.1.64/26'
+    }
+    {
+      name: jumpboxSubnetName
+      addressPrefix: '10.0.1.128/28'
     }
   ]
 }
@@ -132,7 +125,7 @@ module storageAccountRoleAssignment 'modules/storageAccountRoleAssignment.bicep'
   scope: resourceGroup(resourceGroupName)
   params: {
     principalId: principalId
-    principalType: principalType
     roleDefinitionResourceId: roleStorageBlobDataContributor
+    assetPrefix: assetPrefix
   }
 }

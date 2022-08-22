@@ -1,10 +1,7 @@
 @description('This is the prefix for each Azure resource name')
-param assetPrefix string = 'bagbyfd'
+param assetPrefix string 
 
-param storageAccountWebsiteLocations array = [
-  'eastus'
-  'westus3'
-]
+param storageAccountWebsiteLocations array 
 
 resource storageAccounts 'Microsoft.Storage/storageAccounts@2019-06-01' existing = [for location in storageAccountWebsiteLocations: {
   name: '${assetPrefix}st${location}'
