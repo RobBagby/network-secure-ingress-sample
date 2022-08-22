@@ -64,7 +64,6 @@ There are a couple of prerequisites you will need:
 
 - You will need to clone the repository
 - A SSH key pair
-- The object id of the logged in user
 
 ### Clone or download this repository
 
@@ -83,24 +82,21 @@ There are a variety of ways to create the SSH pey pair:
 - [Create and manage SSH keys locally](https://docs.microsoft.com/azure/virtual-machines/linux/create-ssh-keys-detailed)
 - [Create and manage SSH Keys with the Azure CLI](https://docs.microsoft.com/azure/virtual-machines/ssh-keys-azure-cli)
 
-### Getting the object id of the logged in user
-
-You must pass the object id of the logged in user as a parameter to deployVnet.bicep. This user will be given Storage Blob Data Contributor Role Assignment at the Resource Group level. This SP can be used to connect to the storage accounts. To get the object id, run the following command in your shell.
-
-```bash
-az ad signed-in-user show --query id
-```
-
 ## Deploying
 
 ### Deploying Azure Front Door Standard
 
-Use the following command to deploy the Azure Front Door Standard deployment. Make sure you are in the root directory of the repository you cloned.
+Use the following command to deploy the Azure Front Door Standard deployment. Make sure you are in the root directory of the repository you cloned and that you update the variables.
 
 ```bash
+ASSET_PREFIX=<SetToAUniquePrefixBetween6and10characters>
+FRONT_DOOR_SKU=Standard_AzureFrontDoor
+LOCATION=centralus
+PRINCIPAL_ID=$(az ad signed-in-user show --query id | tr -d '"')
+
 az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoorAndWeb.bicep \
-  --location centralus \
-  -p frontDoorSkuName=Standard_AzureFrontDoor assetPrefix=<uniqueprefixname> principalId=<objectIdOfLoggedInUser>
+  --location $LOCATION \
+  -p frontDoorSkuName=$FRONT_DOOR_SKU assetPrefix=$ASSET_PREFIX principalId=$PRINCIPAL_ID
 ```
 
 ### Deploying Azure Front Door Premium With Private Endpoints
@@ -108,9 +104,14 @@ az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoor
 Use the following command to deploy the Azure Front Door Premium deployment
 
 ```bash
+ASSET_PREFIX=<SetToAUniquePrefixBetween6and12characters>
+FRONT_DOOR_SKU=Premium_AzureFrontDoor
+LOCATION=centralus
+PRINCIPAL_ID=$(az ad signed-in-user show --query id | tr -d '"')
+
 az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoorAndWeb.bicep \
-  --location centralus \
-  -p frontDoorSkuName=Premium_AzureFrontDoor assetPrefix=<uniqueprefixname> principalId=<objectIdOfLoggedInUser>
+  --location $LOCATION \
+  -p frontDoorSkuName=$FRONT_DOOR_SKU assetPrefix=$ASSET_PREFIX principalId=$PRINCIPAL_ID
 ```
 
 ### Deploying the VNet for the Front Door Premium deployment
@@ -118,7 +119,6 @@ az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoor
 You will need to update the following parameters in parameters.json:
 
 1. **jumpboxPublicSshKey** - Set this to the public SSH key you created earlier.
-1. **assetPrefix** - This is used as the basis for the names of every asset deployed. For example if the assetPrefix is 'testworkload', the Azure Resource Group name will be 'testworkload-rg' and the Front Door name will be testworkload-fdprofile. This assetPrefix MUST match the assetPrefix used in the Front Door Premium deployment.
 1. **storageAccountWebsiteLocations** - Set this to an array of valid Azure locations. Storage Accounts will be created in each location. The following is an example:
 
    ```json
@@ -133,15 +133,16 @@ You will need to update the following parameters in parameters.json:
 Use the following command to deploy the Virtual Network deployment
 
 ```bash
-az deployment group create \
-  --template-file ./infra-as-code/bicep/deployVnet.bicep \
-  --resource-group <resourceGroupName> \
-  --location=centralus \
+RESOURCE_GROUP=${ASSET_PREFIX}-rg
+
+az deployment group create --template-file ./infra-as-code/bicep/deployVnet.bicep \
+  --resource-group $RESOURCE_GROUP \
   --parameters @./infra-as-code/bicep/parameters.json 
+  --parameters assetPrefix=$ASSET_PREFIX location=$LOCATION
 ```
 
-Note: The resourceGroupName should be the name of the resource group deployed in the Front Door Premium deployment.
-Note: You MUST make sure that the assetPrefix matches the assetPrefix used in the Front Door Premium deployment.
+**Note: The resourceGroupName should be the name of the resource group deployed in the Front Door Premium deployment.**<br />
+**Note: You MUST make sure that the assetPrefix matches the assetPrefix used in the Front Door Premium deployment.**
 
 ## Adding index.html files to the websites
 
@@ -163,36 +164,31 @@ Perform the following steps:
 
 ### Add the files via the CLI
 
+**Note: The following commands can be used if you kept the default storage account locations. If you changed the locations, you will need to update the script with the locations you used.** <br/><br/>
+
 Use the following commands to copy the sample web pages to your storage accounts:
 
 ```bash
-az storage blob copy start \
-  --account-name <nameOfWestStorageAccount> \
-  --destination-blob index.html \
-  --auth-mode login \
-  --destination-container web \
-  --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/west/index.html
+ASSET_PREFIX=<SetToAUniquePrefixBetween6and12characters>
+NAME_OF_WEST_STORAGE_ACCOUNT=${ASSET_PREFIX}stwestus3
+NAME_OF_EAST_STORAGE_ACCOUNT=${ASSET_PREFIX}steastus
 
-az storage blob copy start \
-  --account-name <nameOfEastStorageAccount> \
-  --destination-blob index.html \
-  --auth-mode login \
-  --destination-container web \
-  --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/east/index.html
+az storage blob copy start --account-name $NAME_OF_WEST_STORAGE_ACCOUNT --destination-blob index.html --auth-mode login --destination-container web --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/west/index.html
+az storage blob copy start --account-name $NAME_OF_EAST_STORAGE_ACCOUNT --destination-blob index.html --auth-mode login --destination-container web --source-uri https://raw.githubusercontent.com/RobBagby/network-secure-ingress-sample/main/sample-websites/east/index.html
 ```
 
 Use the following commands to validate that the web pages were copied to the storage accounts:
 
 ```bash
-az storage blob list -c web --account-name <nameOfWestStorageAccount> --auth-mode login -o table
-az storage blob list -c web --account-name <nameOfEastStorageAccount> --auth-mode login -o table
+az storage blob list -c web --account-name $NAME_OF_WEST_STORAGE_ACCOUNT --auth-mode login -o table
+az storage blob list -c web --account-name $NAME_OF_EAST_STORAGE_ACCOUNT --auth-mode login -o table
 ```
 
 Note: You might need to set the content-type for the index.html files to "text/html". To do that, run the following commands.
 
 ```bash
-az storage blob update --account-name <nameOfWestStorageAccount> --container-name web --name index.html --content-type "text/html" --auth-mode login
-az storage blob update --account-name <nameOfEastStorageAccount> --container-name web --name index.html --content-type "text/html" --auth-mode login
+az storage blob update --account-name $NAME_OF_WEST_STORAGE_ACCOUNT --container-name web --name index.html --content-type "text/html" --auth-mode login
+az storage blob update --account-name $NAME_OF_EAST_STORAGE_ACCOUNT --container-name web --name index.html --content-type "text/html" --auth-mode login
 ```
 
 ## Approve the private endpoint requests
