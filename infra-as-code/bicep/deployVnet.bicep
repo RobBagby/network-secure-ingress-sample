@@ -18,16 +18,10 @@ var vmadmin = 'azureuser'
 @secure()
 param jumpboxPublicSshKey string
 
-@description('Service principal object id. This SP will be given Storage Blob Data Contributor Role Assignment. It can be used to update the website.')
-@secure()
-param principalId string = ''
-
 var resourceGroupName = resourceGroup().name
 var bastionSubnetName = 'AzureBastionSubnet'
 var jumpboxSubnetName = 'JumpboxSubnet'
 var privateEndpointsSubnetName = 'PrivateEndpointsSubnet'
-
-var roleStorageBlobDataContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
 var vnetSettings = {
   name: '${assetPrefix}-vnet'
@@ -118,14 +112,4 @@ module storagePe 'modules/storagePrivateEndpoints.bicep' = {
     vnet
     storageAccounts
   ]
-}
-
-module storageAccountRoleAssignment 'modules/storageAccountRoleAssignment.bicep' = {
-  name: 'storageAccountRoleAssignment'
-  scope: resourceGroup(resourceGroupName)
-  params: {
-    principalId: principalId
-    roleDefinitionResourceId: roleStorageBlobDataContributor
-    assetPrefix: assetPrefix
-  }
 }

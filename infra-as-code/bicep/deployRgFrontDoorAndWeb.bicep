@@ -21,7 +21,12 @@ param storageAccountWebsiteLocations array = [
 ])
 param frontDoorSkuName string = 'Standard_AzureFrontDoor'
 
+@description('The object id of the logged in user. This user will be given Storage Blob Data Contributor Role Assignment. It can be used to update the website.')
+@secure()
+param principalId string = ''
+
 var rgName = '${assetPrefix}-rg'
+var roleStorageBlobDataContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
 module rg 'modules/rg.bicep' = {
   name: rgName
@@ -49,4 +54,17 @@ module frontDoor 'modules/frontdoor.bicep' = {
     assetPrefix: assetPrefix
     blobOrigins: storageAccounts.outputs.storageSettings
   }
+}
+
+module storageAccountRoleAssignment 'modules/storageAccountRoleAssignment.bicep' = {
+  name: 'storageAccountRoleAssignment'
+  scope: resourceGroup(rgName)
+  params: {
+    principalId: principalId
+    roleDefinitionResourceId: roleStorageBlobDataContributor
+    assetPrefix: assetPrefix
+  }
+  dependsOn: [
+    rg
+  ]
 }
