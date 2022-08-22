@@ -6,7 +6,7 @@ targetScope = 'subscription'
 param assetPrefix string
 
 @description('The location of the resource group, vnet, jumpbox and bastion.')
-param location string = 'centralus'
+param location string 
 
 @description('This is an array of valid azure locations where storage accounts will be deployed.')
 param storageAccountWebsiteLocations array = [
