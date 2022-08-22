@@ -17,7 +17,7 @@ The Azure Front Door Standard deployment illustrates global routing without secu
 
 The storage accounts will be added as origins to Front Door.
 
-Once the deployment is complete, you will need to add an "index.html" file to the web blob container in each Storage Account. You provide the object id of a Service Principal as a parameter (principalId). The Service Principal is given an Azure Role Based Access Control (RBAC) role assignment of "Storage Blob Data Contributor". You can use this Service Principal to copy index.html files to each Storage Account. You will find the commands in the instructions below.
+Once the deployment is complete, you will need to add an "index.html" file to the web blob container in each Storage Account. The deployment does an Azure Role Based Access Control (RBAC) role assignment of "Storage Blob Data Contributor" for the supplied principalId parameter. The id should be for the logged in user. The Storage Accounts are not locked down from a network perspective, so you can copy index.html files to each Storage Account. You will find the commands in the instructions below.
 
 ### Azure Front Door Premium
 
@@ -100,7 +100,7 @@ Use the following command to deploy the Azure Front Door Standard deployment. Ma
 ```bash
 az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoorAndWeb.bicep \
   --location centralus \
-  -p frontDoorSkuName=Standard_AzureFrontDoor assetPrefix=<uniqueprefixname>
+  -p frontDoorSkuName=Standard_AzureFrontDoor assetPrefix=<uniqueprefixname> principalId=<objectIdOfLoggedInUser>
 ```
 
 ### Deploying Azure Front Door Premium With Private Endpoints
@@ -110,7 +110,7 @@ Use the following command to deploy the Azure Front Door Premium deployment
 ```bash
 az deployment sub create --template-file ./infra-as-code/bicep/deployRgFrontDoorAndWeb.bicep \
   --location centralus \
-  -p frontDoorSkuName=Premium_AzureFrontDoor assetPrefix=<uniqueprefixname>
+  -p frontDoorSkuName=Premium_AzureFrontDoor assetPrefix=<uniqueprefixname> principalId=<objectIdOfLoggedInUser>
 ```
 
 ### Deploying the VNet for the Front Door Premium deployment
@@ -129,8 +129,6 @@ You will need to update the following parameters in parameters.json:
       ]
     },
    ```
-
-1. **principalId** - Set this to the object id of the logged in user you queried for earlier.
 
 Use the following command to deploy the Virtual Network deployment
 
