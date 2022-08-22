@@ -4,10 +4,13 @@ param principalId string
 @description('The id of the existing role definition')
 param roleDefinitionResourceId string
 
-var principalType = 'ServicePrincipal'
+@description('This is the prefix for each Azure resource name')
+param assetPrefix string = 'bagbyfd'
+
+var principalType = 'User'
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(principalId, roleDefinitionResourceId)
+  name: guid(principalId, roleDefinitionResourceId, assetPrefix)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionResourceId)
     principalId: principalId
