@@ -38,14 +38,13 @@ Again, all requests will flow through Azure Front Door and Azure Front Door will
 This deployment illustrates how an administrator could connect to a jumpbox virtual machine via Azure Bastion to perform any (emergency) administrative tasks. The following resources are deployed:
 
 - Azure Virtual Network with 5 subnets:
-  - default
-  - FirewallSubnet
+  - WorkloadSubnet
   - PrivateEndpointsSubnet
   - JumpboxSubnet
   - AzureBastionSubnet
 - Jumpbox Virtual Machine
 - Azure Bastion
-- Private endpoints to each storage account
+- Private endpoints that connect to each storage account
 - Private DNS Zone - configured with A records for the private endpoint URLs to the storage accounts
 
 The following describes the administrative flow:

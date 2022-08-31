@@ -31,7 +31,7 @@ var vnetSettings = {
   ]
   subnets: [
     {
-      name: 'workloadSubnet'
+      name: 'WorkloadSubnet'
       addressPrefix: '10.0.0.0/24'
     }
     {
