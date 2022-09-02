@@ -137,7 +137,7 @@ RESOURCE_GROUP=${ASSET_PREFIX}-rg
 
 az deployment group create --template-file ./infra-as-code/bicep/deployVnet.bicep \
   --resource-group $RESOURCE_GROUP \
-  --parameters @./infra-as-code/bicep/parameters.json 
+  --parameters @./infra-as-code/bicep/parameters.json \
   --parameters assetPrefix=$ASSET_PREFIX location=$LOCATION
 ```
 
